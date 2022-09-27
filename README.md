@@ -2,6 +2,16 @@
 A moderately simple app to trigger notifications based on reddit submissions to different subreddits based on a set of rules
 
 # Instructions:
+## Running the bot
+### Docker Compose
+Grab the `examples/docker-compose.yaml` file and do the standard `docker-compose up`
+
+### Kubernetes
+Grab the `examples/kubernetes.yaml` file and edit it to suit your needs. Then just apply it to your cluster
+
+### Straight up
+Just run `main.py`
+
 ## Configuration
 ### Via file
 The bot will try to pick up a config.yaml file from its working directory. An alternate file location can be specified with the environment variable: `BOT_CONFIG_PATH`. Alternatively, all options can be specified as environment variables.
