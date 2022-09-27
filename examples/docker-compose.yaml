@@ -1,0 +1,10 @@
+version: '3'
+
+services:
+  octoprint:
+    image: drcarrot/reddit-keywrd-bot:latest
+    restart: unless-stopped
+    environment:
+     - BOT_CONFIG_PATH=/config/config.yaml
+    volumes:
+     - data:/config
