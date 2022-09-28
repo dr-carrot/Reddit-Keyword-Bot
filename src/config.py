@@ -5,7 +5,7 @@ import yaml
 from collections.abc import MutableMapping
 import sys
 
-from src import logger
+import logger
 
 DEFAULT_MESSAGE_BODY_TEMPLATE = 'A post was found matching your search criteria in $subreddit: $link'
 DEFAULT_MESSAGE_SUBJECT_TEMPLATE = 'A post was found in $subreddit'
