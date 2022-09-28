@@ -98,10 +98,10 @@ def connect_to_reddit():
 if __name__ == '__main__':
     config.initialize()
     logger.info("Configuration loaded!")
-    logger.debug("Dump configuration:")
-    logger.debug(str(config.configuration.__dict__).replace(config.configuration.reddit["password"], '[redacted]'))
+    logger.debug("Dump configuration:", dict_msg=config.safe_config())
     if config.configuration.prometheus["enabled"]:
-        start_http_server(config.configuration.prometheus["port"])
+        logger.debug('Prometheus is enabled')
+        start_http_server(int(config.configuration.prometheus["port"]))
     try:
         find_submissions(connect_to_reddit())
     except KeyboardInterrupt:
