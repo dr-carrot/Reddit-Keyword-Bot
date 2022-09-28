@@ -127,6 +127,8 @@ def initialize():
     # If any of the notifications are missing required fields, delete the config
     for key, value in flatten(configuration.notification).items():
         if value is None:
-            logger.info("Notification service has been disabled: " + key.split('_')[0])
             configuration.notification.pop(key.split('_')[0], None)
+        else:
+            logger.info("Using Notification service: " + key.split('_')[0])
+
     configuration.verify()
