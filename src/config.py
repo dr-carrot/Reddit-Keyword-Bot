@@ -1,3 +1,4 @@
+import copy
 import json
 import os
 from os import path
@@ -103,6 +104,13 @@ def merge(a, b, obj_path=None):
                 a[key] = b[key]
 
     return a
+
+
+def safe_config():
+    cpy = copy.deepcopy(configuration.__dict__)
+    cpy['reddit']['password'] = '[REDACTED]'
+    cpy['reddit']['clientSecret'] = '[REDACTED]'
+    return cpy
 
 
 def initialize():
