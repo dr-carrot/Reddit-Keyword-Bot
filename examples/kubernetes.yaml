@@ -1,0 +1,57 @@
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: reddit-keyword-bot
+spec:
+  replicas: 1
+  template:
+    spec:
+      imagePullPolicy: "Always"
+      restartPolicy: Always
+      hostNetwork: true
+      volumes:
+        - name: config-file
+          configMap:
+            name: config-file
+      containers:
+        - image: drcarrot/reddit-keyword-bot
+          name: reddit-keyword-bot
+          env:
+            - name: BOT_REDDIT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: reddit-bot-secrets
+                  key: redditPassword
+            - name: BOT_REDDIT_CLIENTID
+              valueFrom:
+                secretKeyRef:
+                  name: reddit-bot-secrets
+                  key: clientId
+            - name: BOT_REDDIT_CLIENTSECRET
+              valueFrom:
+                secretKeyRef:
+                  name: reddit-bot-secrets
+                  key: clientSecret
+          volumeMounts:
+            - mountPath: /config/config.yaml
+              name: reddit-bot-config-file
+              subPath: config.yaml
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: reddit-bot-config-file
+data:
+  rffmpeg.yaml: |
+    scraper: ...
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: reddit-bot-secrets
+data:
+  redditPassword: 12345
+  clientId: 6789
+  clientSecret: abcd
+---
