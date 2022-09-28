@@ -7,6 +7,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 ENV PYTHONUNBUFFERED 1
 ENV PYTHONIOENCODING UTF-8
 
-COPY ./src .
+COPY ./src ./src
 
-CMD [ "python", "main.py" ]
+CMD [ "python", "./src/main.py" ]
