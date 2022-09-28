@@ -9,4 +9,4 @@ ENV PYTHONIOENCODING UTF-8
 
 COPY ./src .
 
-CMD [ "python", "./main.py" ]
+CMD [ "python", "main.py" ]
