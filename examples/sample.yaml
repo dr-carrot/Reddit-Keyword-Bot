@@ -7,7 +7,7 @@ logLevel: debug
 exitOnError: false
 # Open posts in an alternative reddit client
 # Current options: None or default (USe new reddit), old (use old reddit), apollo (links the openinapollo page)
-redditClient: Apolloapp
+redditClient: Apollo
 # Prometheus configuration (Will be exposed at /metrics)
 prometheus:
   # Whether prometheus is enabled
@@ -62,5 +62,5 @@ scraper:
     subreddits: ["All"]
     queries:
       - - deal
-      - - "/[tT]he( |\\.|,)/"
+      - - "~/[tT]he( |\\.|,)/"
 

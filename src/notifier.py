@@ -57,16 +57,16 @@ def send_to_discord(submission, config_data):
             sub_url = 'https://openinapollo.com?subreddit=' + submission.subreddit.display_name
             post_url = 'https://openinapollo.com?subreddit=' + submission.subreddit.display_name + '&postID=' + submission.id
         else:
-            logger.error('Could not build reddit url!')
+            logger.error('Could not build reddit url! Unknown client type')
             return
 
         payload = {"embeds": [
             {
                 "color": color,
                 "author": {
-                    "name": '[' + ', '.join(
+                    "name": '[' + ', '.join(set(
                         [item['name'] for item in
-                         config_data['match_data']]) + '] in ' + submission.subreddit.display_name_prefixed,
+                         config_data['match_data']])) + '] in ' + submission.subreddit.display_name_prefixed,
                     "url": sub_url,
                     "icon_url": img
                 },
