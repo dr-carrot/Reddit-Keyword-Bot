@@ -36,7 +36,7 @@ scraper:
       - hardwareswap
       - buildapcsales
       - homelabsales
-    queries:
+    expressions:
       - - "ruckus"
         - "/r[0-9]50/"
         - "[FS]"
@@ -53,14 +53,14 @@ scraper:
       - hardwareswap
       - buildapcsales
       - homelabsales
-    queries:
+    expressions:
       - - "tablet"
       - - "ipad"
 
   - name: All the deals
     type: all
     subreddits: ["All"]
-    queries:
+    expressions:
       - - deal
 #      - - "~/[tT]he( |\\.|,)/"
 

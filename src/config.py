@@ -55,11 +55,24 @@ class BotProperties:
 
         items = flatten(self.__dict__)
         for key, value in items.items():
-
             if value is None:
                 logger.error(
                     'Missing value for attribute: ' + '.'.join(key.split('_')) + ', ENV var: ' + to_env_var(key))
                 has_issues = True
+        for ix in range(0, len(self.scraper)):
+            item = self.scraper[ix]
+            if 'name' not in item:
+                has_issues = True
+                logger.error("Missing a 'name' value for scraper profile at index " + str(ix))
+            if 'type' not in item:
+                has_issues = True
+                logger.error("Missing a 'type' value for scraper profile at index " + str(ix))
+            if 'subreddits' not in item:
+                has_issues = True
+                logger.error("Missing a 'subreddits' value for scraper profile at index " + str(ix))
+            if 'expressions' not in item:
+                has_issues = True
+                logger.error("Missing an 'expression' value for scraper profile at index " + str(ix))
         if has_issues:
             sys.exit(1)
 

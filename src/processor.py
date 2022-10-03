@@ -85,20 +85,20 @@ def _should_notify(submission, cfg):
     found_key = None
 
     if 'title' == cfg['type']:
-        is_found, found_data = check_key(cfg['queries'], submission.title)
+        is_found, found_data = check_key(cfg['expressions'], submission.title)
         if is_found:
             found_key = 'title'
 
     if 'body' == cfg['type'] and not is_found and 'selftext' in submission.__dict__:
-        is_found, found_data = check_key(cfg['queries'], submission.selftext)
+        is_found, found_data = check_key(cfg['expressions'], submission.selftext)
         if is_found:
             found_key = 'body'
 
     if 'all' == cfg['type'] and not is_found:
-        is_found, found_data = check_key(cfg['queries'], submission.title)
+        is_found, found_data = check_key(cfg['expressions'], submission.title)
         if not is_found:
             if 'selftext' in submission.__dict__:
-                is_found, found_data = check_key(cfg['queries'], submission.selftext)
+                is_found, found_data = check_key(cfg['expressions'], submission.selftext)
                 if is_found:
                     found_key = 'all (body)'
         else:

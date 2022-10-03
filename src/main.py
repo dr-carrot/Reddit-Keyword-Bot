@@ -39,7 +39,7 @@ def find_submissions(reddit):
     logger.debug('Begin!')
     all_key = next((x for x in subreddit_list if x.lower() == 'all'), None)
     if all_key is not None:
-        logger.warn('It is assumed that any unknown key will match with queries from r/' + all_key + '!')
+        logger.warn('It is assumed that any unknown key will match with expressions from r/' + all_key + '!')
     try:
         error_count = 0
         while True:
