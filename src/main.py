@@ -8,20 +8,36 @@ import notifier
 from prometheus_client import start_http_server, Counter
 
 foundCounter = Counter('reddit_bot_found_posts', 'A count of the posts found by the reddit bot', ['subreddit'])
-matchedCounter = Counter('reddit_bot_matching_posts',
-                         'A count of the posts matching a configured expression by the reddit bot',
-                         ['subreddit'])
+matchedBySubredditCounter = Counter('reddit_bot_matching_subreddit_posts',
+                                    'A count of the posts matching a configured expression across configuration by '
+                                    'subreddit by the reddit bot',
+                                    ['subreddit'])
+matchedByRuleCounter = Counter('reddit_bot_matching_posts',
+                               'A count of the posts matching a configured expression by rule by the reddit bot',
+                               ['rule_name'])
 matchedExtrasCounter = Counter('reddit_bot_matching_posts_keys',
-                               'A count of the posts matching a configured expression by the reddit bot (Includes labels)',
-                               ['subreddit', 'expression', 'found_key'])
+                               'A count of the posts matching a configured expression by the reddit bot (Includes '
+                               'labels)',
+                               ['subreddit', 'expression', 'rule_name'])
+
+
+def create_trigger_config():
+    conf = {}
+    for i in range(0, len(config.configuration.scraper)):
+        for item in config.configuration.scraper[i]['subreddits']:
+            if item in conf:
+                conf[item].append(i)
+            else:
+                conf[item] = [i]
+    return conf, conf.keys()
 
 
 def find_submissions(reddit):
-    subreddit_list = list(config.configuration.scraper.keys())
+    trigger_conf, subreddit_list = create_trigger_config()
     subreddits = '+'.join(subreddit_list)
     logger.info('Searching in: ' + ', '.join(subreddit_list))
     logger.debug('Begin!')
-    all_key = next((x for x in config.configuration.scraper.keys() if x.lower() == 'all'), None)
+    all_key = next((x for x in subreddit_list if x.lower() == 'all'), None)
     if all_key is not None:
         logger.warn('It is assumed that any unknown key will match with queries from r/' + all_key + '!')
     try:
@@ -31,7 +47,7 @@ def find_submissions(reddit):
                 for submission in reddit.subreddit(subreddits).stream.submissions(skip_existing=True):
                     try:
                         check_key = submission.subreddit.display_name
-                        if submission.subreddit.display_name not in config.configuration.scraper and all_key is not None:
+                        if submission.subreddit.display_name not in trigger_conf and all_key is not None:
                             check_key = all_key
                             logger.info(
                                 'Found new submission in ' + submission.subreddit.display_name_prefixed + ' (via r/' + all_key + '): ' + submission.title)
@@ -40,17 +56,19 @@ def find_submissions(reddit):
                                 'Found new submission in ' + submission.subreddit.display_name_prefixed + ': ' + submission.title)
 
                         foundCounter.labels(submission.subreddit.display_name).inc()
-                        should_notify, keys, found_key = processor.should_notify(
-                            submission, config.configuration.scraper[check_key])
+                        should_notify, match_data = processor.should_notify(
+                            submission, trigger_conf[check_key])
                         if should_notify:
                             template_vars = {
-                                'keys': keys,
+                                'match_data': match_data,
                                 'subreddit': submission.subreddit.display_name_prefixed,
-                                'link': submission.shortlink,
-                                'found_key': found_key
+                                'link': submission.shortlink
                             }
-                            matchedCounter.labels(submission.subreddit.display_name).inc()
-                            matchedExtrasCounter.labels(submission.subreddit.display_name, keys, found_key).inc()
+                            matchedBySubredditCounter.labels(submission.subreddit.display_name).inc()
+                            for rule in trigger_conf[check_key]:
+                                matchedByRuleCounter.labels(rule).inc()
+                            for match in match_data:
+                                matchedExtrasCounter.labels(submission.subreddit.display_name, match['expression'], match['name']).inc()
                             notifier.send_message(submission, template_vars, reddit)
                         error_count = 0
                     except KeyError as ke:

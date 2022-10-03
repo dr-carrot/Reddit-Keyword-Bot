@@ -1,5 +1,28 @@
 import logger
 import re
+import config
+
+
+def parse_query_string(key: str) -> (str, bool, bool):
+    # regex matches are case-sensitive.
+    # If the string starts with // and ends with /, it isn't a regex, but an escaped slash
+    if key.startswith('!'):
+        is_negated = True
+        n_key = key[1:]
+    else:
+        is_negated = False
+        n_key = key
+
+    if n_key.startswith('//') and n_key.endswith('/'):
+        parsed = n_key[1:].lower()
+        is_regex = False
+    elif n_key.startswith('/') and n_key.endswith('/') and not n_key.startswith('//'):
+        parsed = n_key[1:-1]
+        is_regex = True
+    else:
+        parsed = n_key.lower()
+        is_regex = False
+    return parsed, is_negated, is_regex
 
 
 def match_string(key, text):
@@ -38,31 +61,62 @@ def check_key(cfg, text):
     return False, None
 
 
-def should_notify(submission, cfg):
+def should_notify(submission, config_keys):
+    matched_rules = []
+    for ix in config_keys:
+        conf = config.configuration.scraper[ix]
+        is_found, found_data, found_key = _should_notify(submission, conf)
+        if is_found:
+            matched_rules.append({
+                "name": conf["name"],
+                "expression": found_data,
+                "type": found_key
+            })
+    return (len(matched_rules) > 0), matched_rules
+
+
+def _should_notify(submission, cfg):
     if len(cfg) == 0:
-        return True, None
+        return True, None, None
 
     is_found = False
     found_data = None
     found_key = None
 
-    if 'title' in cfg:
-        is_found, found_data = check_key(cfg['title'], submission.title)
+    if 'title' == cfg['type']:
+        is_found, found_data = check_key(cfg['queries'], submission.title)
         if is_found:
             found_key = 'title'
 
-    if 'body' in cfg and not is_found:
-        is_found, found_data = check_key(cfg['body'], submission.body)
+    if 'body' == cfg['type'] and not is_found and 'selftext' in submission.__dict__:
+        is_found, found_data = check_key(cfg['queries'], submission.selftext)
         if is_found:
             found_key = 'body'
 
-    if 'all' in cfg and not is_found:
-        is_found, found_data = check_key(cfg['all'], submission.title)
+    if 'all' == cfg['type'] and not is_found:
+        is_found, found_data = check_key(cfg['queries'], submission.title)
         if not is_found:
-            is_found, found_data = check_key(cfg['all'], submission.body)
-            if is_found:
-                found_key = 'all (body)'
+            if 'selftext' in submission.__dict__:
+                is_found, found_data = check_key(cfg['queries'], submission.selftext)
+                if is_found:
+                    found_key = 'all (body)'
         else:
             found_key = 'all (title)'
 
     return is_found, found_data, found_key
+
+
+def _replace_for_query(text: str, query: str, replL: str, replR: str, replRegex: str) -> str:
+    parsed_query, is_negated, is_regex = parse_query_string(query)
+    if is_negated:
+        return text
+    if is_regex:
+        return re.sub(re.compile('(' + parsed_query + ')'), replRegex, text)
+    return text.replace(parsed_query, replL + parsed_query + replR)
+
+
+def find_and_replace_by_expression(text: str, match_data):
+    for match in match_data:
+        for query in match['expression']:
+            text = _replace_for_query(text, query, '__', '__', '__\\1__')
+    return text

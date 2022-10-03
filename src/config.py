@@ -29,6 +29,7 @@ class BotProperties:
         self.configVersion = 1
         self.scraper = None
         self.logLevel = 'warn'
+        self.redditClient = None
         self.prometheus = {
             "enabled": False,
             "port": 9090

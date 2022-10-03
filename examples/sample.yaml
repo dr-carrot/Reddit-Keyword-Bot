@@ -5,6 +5,9 @@ configVersion: 1
 logLevel: debug
 # If the bot encounters an error, should the application quit, or continue on?
 exitOnError: false
+# Open posts in an alternative reddit client
+# Current options: None or default (USe new reddit), old (use old reddit), apollo (links the openinapollo page)
+redditClient: Apolloapp
 # Prometheus configuration (Will be exposed at /metrics)
 prometheus:
   # Whether prometheus is enabled
@@ -27,28 +30,14 @@ notification:
     webhook: 'https://discord.com/api/webhooks/123456/abcd'
 # Yaml style scraper config
 scraper:
-  # Watch r/All
-  All:
-    # Notice the double dash. This is a list (on or group) containing a list (and group) that contains one item
-    # Thus, we will only fire a notification if the title or body has the word 'deal'
-    title:
-      - - deal
-      - - the
-  pics:
-    # Produces a match for submissions in r/pics where the title contains 'America' (case-insensitive) and not 'goose'
-    # (case-insensitive) and not geese (case-insensitive) and does not match the New Jersey regex.
-    # Effectively, "I want to be notified of submissions in america that do not have geese and are not in New Jersey"
-    title:
-      - - America
-        - "!goose"
-        - "!geese"
-        - "!/[nN]ew.?[jJ]ersey/"
-  food:
-    title:
-      - - Turkey
-  hardwareswap:
-    title:
-      - - ruckus
+  - name: Homelab Parts
+    type: all
+    subreddits:
+      - hardwareswap
+      - buildapcsales
+      - homelabsales
+    queries:
+      - - "ruckus"
         - "/r[0-9]50/"
         - "[FS]"
       # If it's for sale in California, Nevada, or Oregon, I want to know
@@ -58,3 +47,20 @@ scraper:
         - "[FS]"
         - "!SFF"
         - "!xd"
+  - name: Home Automation
+    type: all
+    subreddits:
+      - hardwareswap
+      - buildapcsales
+      - homelabsales
+    queries:
+      - - "tablet"
+      - - "ipad"
+
+  - name: All the deals
+    type: all
+    subreddits: ["All"]
+    queries:
+      - - deal
+      - - "/[tT]he( |\\.|,)/"
+
