@@ -13,7 +13,7 @@ def parse_query_string(key: str) -> (str, bool, bool):
         is_negated = False
         n_key = key
 
-    if key.startswith('~'):
+    if n_key.startswith('~'):
         is_case_sensitive = True
         n_key = key[1:]
     else:

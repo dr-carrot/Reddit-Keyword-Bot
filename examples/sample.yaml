@@ -62,5 +62,5 @@ scraper:
     subreddits: ["All"]
     queries:
       - - deal
-      - - "~/[tT]he( |\\.|,)/"
+#      - - "~/[tT]he( |\\.|,)/"
 
