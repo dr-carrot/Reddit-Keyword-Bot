@@ -1,11 +1,12 @@
 import time
 import datetime
-import config
-import logger
+from . import config
+from . import logger
 import json
 import requests
 from string import Template
 from datetime import datetime, timezone
+from . import processor
 
 DEFAULT_MESSAGE_BODY_TEMPLATE = 'A post was found matching your search criteria in $subreddit: $link'
 DEFAULT_MESSAGE_SUBJECT_TEMPLATE = 'A post was found in $subreddit'
@@ -24,13 +25,13 @@ def clamp_text(text, limit=2048):
     return text[:(limit - 4)] + (text[(limit - 4):] and '...')
 
 
-def send_to_discord(submission):
+def send_to_discord(submission, config_data):
     try:
         headers = {'Content-Type': 'application/json'}
         if hasattr(submission, 'url_overridden_by_dest') and submission.url_overridden_by_dest != '':
             desc = '[' + submission.domain + '](' + submission.url_overridden_by_dest + ')'
         else:
-            desc = clamp_text(submission.selftext)
+            desc = clamp_text(processor.find_and_replace_by_expression(submission.selftext, config_data['match_data']))
         if hasattr(submission.subreddit, 'icon_img') and submission.subreddit.icon_img != '':
             img = submission.subreddit.icon_img
         elif 'community_icon' in vars(submission.subreddit) and submission.subreddit.community_icon != '':
@@ -43,17 +44,35 @@ def send_to_discord(submission):
         else:
             color = 1127128
 
+        title = processor.find_and_replace_by_expression(
+            submission.title, config_data['match_data'])
+
+        if config.configuration.redditClient is None or config.configuration.redditClient.lower() == 'default':
+            sub_url = 'https://www.reddit.com' + submission.subreddit.url
+            post_url = submission.shortlink
+        elif config.configuration.redditClient.lower() == 'old':
+            sub_url = 'https://old.reddit.com' + submission.subreddit.display_name_prefixed
+            post_url = 'https://old.reddit.com' + submission.subreddit.url + '/comments/' + submission.id
+        elif config.configuration.redditClient.lower() == 'apollo':
+            sub_url = 'https://openinapollo.com?subreddit=' + submission.subreddit.display_name
+            post_url = 'https://openinapollo.com?subreddit=' + submission.subreddit.display_name + '&postID=' + submission.id
+        else:
+            logger.error('Could not build reddit url! Unknown client type')
+            return
+
         payload = {"embeds": [
             {
                 "color": color,
                 "author": {
-                    "name": submission.subreddit.display_name_prefixed,
-                    "url": 'https://www.reddit.com' + submission.subreddit.url,
+                    "name": '[' + ', '.join(set(
+                        [item['name'] for item in
+                         config_data['match_data']])) + '] in ' + submission.subreddit.display_name_prefixed,
+                    "url": sub_url,
                     "icon_url": img
                 },
-                "title": clamp_text(submission.title, limit=256),
+                "title": clamp_text(title, limit=256),
                 "description": desc,
-                "url": submission.shortlink,
+                "url": post_url,
                 "timestamp": datetime.fromtimestamp(submission.created_utc, timezone.utc).isoformat().replace('+00:00',
                                                                                                               'Z'),
                 "footer": {
@@ -90,7 +109,7 @@ def send_message(submission, template_vars, reddit):
             body = Template(DEFAULT_MESSAGE_BODY_TEMPLATE).substitute(template_vars)
             send_to_reddit(subject, body, reddit)
         if 'discord' in config.configuration.notification:
-            send_to_discord(submission)
+            send_to_discord(submission, template_vars)
     except Exception as e:
         logger.error('Could not send message', err=e)
         raise e

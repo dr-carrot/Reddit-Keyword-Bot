@@ -43,7 +43,7 @@ kind: ConfigMap
 metadata:
   name: reddit-bot-config-file
 data:
-  rffmpeg.yaml: |
+  config.yaml: |
     scraper: ...
 ---
 apiVersion: v1

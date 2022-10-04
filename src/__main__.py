@@ -1,0 +1,9 @@
+#! /usr/bin/python3
+from app import main
+
+
+def run():
+    main.run()
+
+
+run()

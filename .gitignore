@@ -103,3 +103,4 @@ secrets.*
 !*.enc
 
 .idea
+*/.pytest_cache

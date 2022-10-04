@@ -6,7 +6,7 @@ import yaml
 from collections.abc import MutableMapping
 import sys
 
-import logger
+from . import logger
 
 DEFAULT_MESSAGE_BODY_TEMPLATE = 'A post was found matching your search criteria in $subreddit: $link'
 DEFAULT_MESSAGE_SUBJECT_TEMPLATE = 'A post was found in $subreddit'
@@ -29,6 +29,7 @@ class BotProperties:
         self.configVersion = 1
         self.scraper = None
         self.logLevel = 'warn'
+        self.redditClient = 'default'
         self.prometheus = {
             "enabled": False,
             "port": 9090
@@ -54,11 +55,25 @@ class BotProperties:
 
         items = flatten(self.__dict__)
         for key, value in items.items():
-
             if value is None:
                 logger.error(
-                    'Missing value for attribute: ' + '.'.join(key.split('_')) + ', ENV var: ' + to_env_var(key))
+                    'Missing value for required attribute: ' + '.'.join(key.split('_')) + ', Environment variable: ' + to_env_var(key))
                 has_issues = True
+        if self.scraper is not None:
+            for ix in range(0, len(self.scraper)):
+                item = self.scraper[ix]
+                if 'name' not in item:
+                    has_issues = True
+                    logger.error("Missing a 'name' value for scraper profile at index " + str(ix))
+                if 'type' not in item:
+                    has_issues = True
+                    logger.error("Missing a 'type' value for scraper profile at index " + str(ix))
+                if 'subreddits' not in item:
+                    has_issues = True
+                    logger.error("Missing a 'subreddits' value for scraper profile at index " + str(ix))
+                if 'expressions' not in item:
+                    has_issues = True
+                    logger.error("Missing an 'expression' value for scraper profile at index " + str(ix))
         if has_issues:
             sys.exit(1)
 
@@ -129,7 +144,7 @@ def initialize():
             apply_value_to_dict_path(env_dict, key.split('_'), env_val)
 
     # Convert an inline json config to a dictionary
-    if (configuration.scraperJson is not None or configuration.scraperJson != '') and configuration.scraper is None:
+    if (configuration.scraperJson is not None and configuration.scraperJson != '') and configuration.scraper is None:
         configuration.scraper = json.loads(configuration.scraperJson)
 
     # If any of the notifications are missing required fields, delete the config
