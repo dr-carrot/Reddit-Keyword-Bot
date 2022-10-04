@@ -24,7 +24,7 @@ def parse_query_string(key: str) -> (str, bool, bool):
         n_key = n_key[1:]
     else:
         is_case_sensitive = False
-        n_key = n_key.lower()
+        n_key = n_key
 
     if n_key.startswith('//') and n_key.endswith('/'):
         parsed = n_key[1:]
@@ -40,13 +40,17 @@ def parse_query_string(key: str) -> (str, bool, bool):
 
 def match_string(key: str, text: str):
     parsed_query, is_negated, is_regex, is_case_sensitive = parse_query_string(key)
-    if not is_case_sensitive:
-        text = text.lower()
-    if is_regex:
-        logger.debug('Checking regex: ' + parsed_query)
-        return bool(re.search(re.compile(parsed_query), text)) != is_negated
+    logger.debug('Checking query: ' + parsed_query)
+    if is_case_sensitive:
+        if is_regex:
+            return bool(re.search(re.compile(parsed_query), text)) != is_negated
+        else:
+            return bool(re.search(re.compile(re.escape(parsed_query)), text)) != is_negated
     else:
-        return (parsed_query in text) != is_negated
+        if is_regex:
+            return bool(re.search(re.compile(parsed_query, re.IGNORECASE), text)) != is_negated
+        else:
+            return bool(re.search(re.compile(re.escape(parsed_query), re.IGNORECASE), text)) != is_negated
 
 
 def check_key(cfg, text):
@@ -108,22 +112,22 @@ def _should_notify(submission, cfg):
     return is_found, found_data, found_key
 
 
-def _replace_for_query(text: str, query: str, replL: str, replR: str, replRegex: str) -> str:
+def _replace_for_query(text: str, query: str, replRegex: str) -> str:
     parsed_query, is_negated, is_regex, is_case_sensitive = parse_query_string(query)
     if is_negated:
         return text
     if is_case_sensitive:
         if is_regex:
             return re.sub(re.compile('(' + parsed_query + ')'), replRegex, text)
-        return text.replace(parsed_query, replL + parsed_query + replR)
+        return re.sub(re.compile('(' + re.escape(parsed_query) + ')'), replRegex, text)
     else:
         if is_regex:
-            return re.sub(re.compile('(' + parsed_query.lower() + ')'), replRegex, text.lower())
-        return text.replace(parsed_query.lower(), replL + parsed_query.lower() + replR)
+            return re.sub(re.compile('(' + parsed_query + ')', re.IGNORECASE), replRegex, text)
+        return re.sub(re.compile('(' + re.escape(parsed_query) + ')', re.IGNORECASE), replRegex, text)
 
 
 def find_and_replace_by_expression(text: str, match_data):
     for match in match_data:
         for query in match['expression']:
-            text = _replace_for_query(text, query, '__', '__', '__\\1__')
+            text = _replace_for_query(text, query, '__\\1__')
     return text
