@@ -1,10 +1,10 @@
 import sys
 import time
-import logger
-import config
+from . import logger
+from . import config
 import praw
-import processor
-import notifier
+from . import processor
+from . import notifier
 from prometheus_client import start_http_server, Counter
 
 foundCounter = Counter('reddit_bot_found_posts', 'A count of the posts found by the reddit bot', ['subreddit'])
@@ -113,7 +113,7 @@ def connect_to_reddit():
     return reddit
 
 
-if __name__ == '__main__':
+def run():
     config.initialize()
     logger.info("Configuration loaded!")
     logger.debug("Dump configuration:", dict_msg=config.safe_config())
@@ -124,3 +124,7 @@ if __name__ == '__main__':
         find_submissions(connect_to_reddit())
     except KeyboardInterrupt:
         logger.info('Exited (interrupt)')
+
+
+if __name__ == '__main__':
+    run()

@@ -10,4 +10,4 @@ ENV PYTHONPATH /usr/src/app
 
 COPY ./src .
 
-CMD [ "python", "main.py" ]
+CMD [ "python", "__main__.py" ]

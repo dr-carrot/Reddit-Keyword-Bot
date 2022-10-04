@@ -1,48 +1,52 @@
-import logger
+from . import logger
 import re
-import config
+from . import config
 
 
 def parse_query_string(key: str) -> (str, bool, bool):
     # regex matches are case-sensitive.
     # If the string starts with // and ends with /, it isn't a regex, but an escaped slash
-    if key.startswith('!'):
+    if key.startswith('!!'):
+        is_negated = False
+        n_key = key[1:]
+    elif key.startswith('!'):
         is_negated = True
         n_key = key[1:]
     else:
         is_negated = False
         n_key = key
 
-    if n_key.startswith('~'):
+    if n_key.startswith('~~'):
+        is_case_sensitive = False
+        n_key = n_key[1:]
+    elif n_key.startswith('~'):
         is_case_sensitive = True
-        n_key = key[1:]
+        n_key = n_key[1:]
     else:
         is_case_sensitive = False
-        n_key = key.lower()
+        n_key = n_key.lower()
 
     if n_key.startswith('//') and n_key.endswith('/'):
-        parsed = n_key[1:].lower()
+        parsed = n_key[1:]
         is_regex = False
     elif n_key.startswith('/') and n_key.endswith('/') and not n_key.startswith('//'):
         parsed = n_key[1:-1]
         is_regex = True
     else:
-        parsed = n_key.lower()
+        parsed = n_key
         is_regex = False
     return parsed, is_negated, is_regex, is_case_sensitive
 
 
 def match_string(key: str, text: str):
     parsed_query, is_negated, is_regex, is_case_sensitive = parse_query_string(key)
-    if is_case_sensitive:
+    if not is_case_sensitive:
         text = text.lower()
-    if not is_regex:
-        return (parsed_query in text) != is_negated
     if is_regex:
         logger.debug('Checking regex: ' + parsed_query)
         return bool(re.search(re.compile(parsed_query), text)) != is_negated
     else:
-        return (parsed_query.lower() in text.lower()) != is_negated
+        return (parsed_query in text) != is_negated
 
 
 def check_key(cfg, text):
@@ -77,9 +81,6 @@ def should_notify(submission, config_keys):
 
 
 def _should_notify(submission, cfg):
-    if len(cfg) == 0:
-        return True, None, None
-
     is_found = False
     found_data = None
     found_key = None

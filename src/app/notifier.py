@@ -1,12 +1,12 @@
 import time
 import datetime
-import config
-import logger
+from . import config
+from . import logger
 import json
 import requests
 from string import Template
 from datetime import datetime, timezone
-import processor
+from . import processor
 
 DEFAULT_MESSAGE_BODY_TEMPLATE = 'A post was found matching your search criteria in $subreddit: $link'
 DEFAULT_MESSAGE_SUBJECT_TEMPLATE = 'A post was found in $subreddit'
