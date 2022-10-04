@@ -8,7 +8,7 @@ class ParserTests(unittest.TestCase):
 
     def test_query_parser_simple_string(self):
         parsed, is_negated, is_regex, is_case_sensitive = processor.parse_query_string('Hello')
-        self.assertEqual('hello', parsed)
+        self.assertEqual('Hello', parsed)
         self.assertFalse(is_negated)
         self.assertFalse(is_regex)
         self.assertFalse(is_case_sensitive)
@@ -22,14 +22,14 @@ class ParserTests(unittest.TestCase):
 
     def test_query_parser_simple_string_case_insensitive_negated(self):
         parsed, is_negated, is_regex, is_case_sensitive = processor.parse_query_string('!Hello')
-        self.assertEqual('hello', parsed)
+        self.assertEqual('Hello', parsed)
         self.assertTrue(is_negated)
         self.assertFalse(is_regex)
         self.assertFalse(is_case_sensitive)
 
     def test_query_parser_simple_string_case_escaped_negated(self):
         parsed, is_negated, is_regex, is_case_sensitive = processor.parse_query_string('!!Hello')
-        self.assertEqual('!hello', parsed)
+        self.assertEqual('!Hello', parsed)
         self.assertFalse(is_negated)
         self.assertFalse(is_regex)
         self.assertFalse(is_case_sensitive)
@@ -43,14 +43,14 @@ class ParserTests(unittest.TestCase):
 
     def test_query_parser_simple_string_case_insensitive_escaped_negation(self):
         parsed, is_negated, is_regex, is_case_sensitive = processor.parse_query_string('!!~Hello')
-        self.assertEqual('!~hello', parsed)
+        self.assertEqual('!~Hello', parsed)
         self.assertFalse(is_negated)
         self.assertFalse(is_regex)
         self.assertFalse(is_case_sensitive)
 
     def test_query_parser_regex(self):
         parsed, is_negated, is_regex, is_case_sensitive = processor.parse_query_string('/Hello.?World/')
-        self.assertEqual('hello.?world', parsed)
+        self.assertEqual('Hello.?World', parsed)
         self.assertFalse(is_negated)
         self.assertTrue(is_regex)
         self.assertFalse(is_case_sensitive)
@@ -64,26 +64,26 @@ class ParserTests(unittest.TestCase):
 
     def test_query_parser_regex_negated(self):
         parsed, is_negated, is_regex, is_case_sensitive = processor.parse_query_string('!/Hello.?World/')
-        self.assertEqual('hello.?world', parsed)
+        self.assertEqual('Hello.?World', parsed)
         self.assertTrue(is_negated)
         self.assertTrue(is_regex)
         self.assertFalse(is_case_sensitive)
 
     def test_query_parser_regex_escaped_negated(self):
         parsed, is_negated, is_regex, is_case_sensitive = processor.parse_query_string('!!/Hello.?World/')
-        self.assertEqual('!/hello.?world/', parsed)
+        self.assertEqual('!/Hello.?World/', parsed)
         self.assertFalse(is_negated)
         self.assertFalse(is_regex)
         self.assertFalse(is_case_sensitive)
 
     def test_query_parser_non_regex_escaped_negation(self):
         parsed, is_negated, is_regex, is_case_sensitive = processor.parse_query_string('!!~/Hello.?World/')
-        self.assertEqual('!~/hello.?world/', parsed)
+        self.assertEqual('!~/Hello.?World/', parsed)
         self.assertFalse(is_negated)
         self.assertFalse(is_regex)
         self.assertFalse(is_case_sensitive)
 
-    def test_query_parser_simple_string_escaped_case_sensitive(self):
+    def test_query_parser_simple_string_escaped_case_insensitive(self):
         parsed, is_negated, is_regex, is_case_sensitive = processor.parse_query_string('~~Hello World')
         self.assertEqual('~Hello World', parsed)
         self.assertFalse(is_negated)
@@ -92,7 +92,7 @@ class ParserTests(unittest.TestCase):
 
     def test_query_parser_simple_string_escaped_regex(self):
         parsed, is_negated, is_regex, is_case_sensitive = processor.parse_query_string('//Hello World/')
-        self.assertEqual('/hello world/', parsed)
+        self.assertEqual('/Hello World/', parsed)
         self.assertFalse(is_negated)
         self.assertFalse(is_regex)
         self.assertFalse(is_case_sensitive)
@@ -152,7 +152,6 @@ class CheckKeyTests(unittest.TestCase):
 
     def test_check_key_empty(self):
         processor.match_string = MagicMock(side_effect=[False, True])
-        # processor.match_string.assert_has_calls(any_order=True)
         is_match, data = processor.check_key([], 'Hello World!')
         self.assertFalse(is_match)
         self.assertEqual(None, data)
@@ -275,22 +274,22 @@ class FindAndReplaceByExpressionTests(unittest.TestCase):
         conf = [
             {'expression': ['yellow', '!orange']}
         ]
-        replaced = processor.find_and_replace_by_expression('Hello world, how is it going? Is it yellow?', conf)
-        self.assertEqual('Hello world, how is it going? Is it __yellow__?', replaced)
+        replaced = processor.find_and_replace_by_expression('Hello world, how is it going? Is it Yellow?', conf)
+        self.assertEqual('Hello world, how is it going? Is it __Yellow__?', replaced)
 
     def test_find_and_replace_by_expression_regex(self):
         conf = [
             {'expression': ['/i[st] ?/']}
         ]
         replaced = processor.find_and_replace_by_expression('Hello world, how is it going? Is it yellow?', conf)
-        self.assertEqual('hello world, how __is ____it __going? __is ____it __yellow?', replaced)
+        self.assertEqual('Hello world, how __is ____it __going? __Is ____it __yellow?', replaced)
 
     def test_find_and_replace_by_expression_regex_complex(self):
         conf = [
             {'expression': ['/s ?/', '~Hello', 'lo']},
         ]
         replaced = processor.find_and_replace_by_expression('Hello world, how is it going? Is it yellow?', conf)
-        self.assertEqual('hel__lo__ world, how i__s __it going? i__s __it yel__lo__w?', replaced)
+        self.assertEqual('__Hel__lo____ world, how i__s __it going? I__s __it yel__lo__w?', replaced)
 
     def test_find_and_replace_by_expression_regex_case_sensitive(self):
         conf = [
