@@ -28,7 +28,7 @@ jobs:
           # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
           flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
       - name: Build coverage file
-      run: |
-        pytest --cache-clear --cov=src/app test/ > pytest-coverage.txt
+        run: |
+          pytest --cache-clear --cov=src/app tests/ > pytest-coverage.txt
       - name: Comment coverage
         uses: coroo/pytest-coverage-commentator@v1.0.2
