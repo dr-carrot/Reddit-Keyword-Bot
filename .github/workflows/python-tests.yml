@@ -30,8 +30,3 @@ jobs:
       - name: Build coverage file
         run: |
           python -m pytest --cache-clear --cov=src/app tests/ --cov-report xml
-      - name: Coveralls
-        uses: coverallsapp/github-action@master
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          path-to-lcov: coverage.xml
