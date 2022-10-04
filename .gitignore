@@ -104,3 +104,4 @@ secrets.*
 
 .idea
 */.pytest_cache
+coverage.*

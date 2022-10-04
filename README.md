@@ -1,4 +1,9 @@
 # Redit Keyword Bot
+![badge](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/dr-carrot/95deece33981c0987df66a1a076c319c/raw/59aac4f6931849f2756b9e9b124b14fa81384a01/rkb_coverage_3.10.json)
+<a href="https://hub.docker.com/r/drcarrot/reddit-keyword-bot">
+<img alt="Docker Pull Count" src="https://img.shields.io/docker/pulls/drcarrot/reddit-keyword-bot.svg"/>
+</a>
+
 A moderately simple app to trigger notifications based on reddit submissions to different subreddits based on a set of rules
 
 
