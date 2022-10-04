@@ -2,7 +2,6 @@ import unittest
 from src.app import processor
 from src.app import config
 from unittest.mock import MagicMock
-from praw.models import Submission
 
 
 class ParserTests(unittest.TestCase):
