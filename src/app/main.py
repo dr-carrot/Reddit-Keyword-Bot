@@ -32,6 +32,41 @@ def create_trigger_config():
     return conf, conf.keys()
 
 
+def process_submission(reddit, submission, trigger_conf, all_key):
+    try:
+        check_key = submission.subreddit.display_name
+        if submission.subreddit.display_name not in trigger_conf and all_key is not None:
+            check_key = all_key
+            logger.info(
+                'Found new submission in ' + submission.subreddit.display_name_prefixed + ' (via r/' + all_key + '): ' + submission.title)
+        else:
+            logger.info(
+                'Found new submission in ' + submission.subreddit.display_name_prefixed + ': ' + submission.title)
+
+        foundCounter.labels(submission.subreddit.display_name).inc()
+        should_notify, match_data = processor.should_notify(
+            submission, trigger_conf[check_key])
+        if should_notify:
+            template_vars = {
+                'match_data': match_data,
+                'subreddit': submission.subreddit.display_name_prefixed,
+                'link': submission.shortlink
+            }
+            matchedBySubredditCounter.labels(submission.subreddit.display_name).inc()
+            for rule in trigger_conf[check_key]:
+                matchedByRuleCounter.labels(rule).inc()
+            for match in match_data:
+                matchedExtrasCounter.labels(submission.subreddit.display_name, match['expression'], match['name']).inc()
+            notifier.send_message(submission, template_vars, reddit)
+    except KeyError as ke:
+        logger.error('Could not find subreddit. They are CASE SENSITIVE:', err=ke)
+        raise ke
+    except Exception as e:
+        logger.error('An error has occurred while consuming a submission:', err=e)
+        if config.configuration.exitOnError:
+            raise e
+
+
 def find_submissions(reddit):
     trigger_conf, subreddit_list = create_trigger_config()
     subreddits = '+'.join(subreddit_list)
@@ -45,39 +80,8 @@ def find_submissions(reddit):
         while True:
             try:
                 for submission in reddit.subreddit(subreddits).stream.submissions(skip_existing=True):
-                    try:
-                        check_key = submission.subreddit.display_name
-                        if submission.subreddit.display_name not in trigger_conf and all_key is not None:
-                            check_key = all_key
-                            logger.info(
-                                'Found new submission in ' + submission.subreddit.display_name_prefixed + ' (via r/' + all_key + '): ' + submission.title)
-                        else:
-                            logger.info(
-                                'Found new submission in ' + submission.subreddit.display_name_prefixed + ': ' + submission.title)
-
-                        foundCounter.labels(submission.subreddit.display_name).inc()
-                        should_notify, match_data = processor.should_notify(
-                            submission, trigger_conf[check_key])
-                        if should_notify:
-                            template_vars = {
-                                'match_data': match_data,
-                                'subreddit': submission.subreddit.display_name_prefixed,
-                                'link': submission.shortlink
-                            }
-                            matchedBySubredditCounter.labels(submission.subreddit.display_name).inc()
-                            for rule in trigger_conf[check_key]:
-                                matchedByRuleCounter.labels(rule).inc()
-                            for match in match_data:
-                                matchedExtrasCounter.labels(submission.subreddit.display_name, match['expression'], match['name']).inc()
-                            notifier.send_message(submission, template_vars, reddit)
-                        error_count = 0
-                    except KeyError as ke:
-                        logger.error('Could not find subreddit. They are CASE SENSITIVE:', err=ke)
-                        raise ke
-                    except Exception as e:
-                        logger.error('An error has occurred while consuming a submission:', err=e)
-                        if config.configuration.exitOnError:
-                            raise e
+                    process_submission(reddit, submission, trigger_conf, all_key)
+                    error_count = 0
             except Exception as e:
                 if config.configuration.exitOnError:
                     raise e
@@ -114,16 +118,19 @@ def connect_to_reddit():
 
 
 def run():
-    config.initialize()
-    logger.info("Configuration loaded!")
-    logger.debug("Dump configuration:", dict_msg=config.safe_config())
-    if config.configuration.prometheus["enabled"]:
-        logger.debug('Prometheus is enabled')
-        start_http_server(int(config.configuration.prometheus["port"]))
-    try:
-        find_submissions(connect_to_reddit())
-    except KeyboardInterrupt:
-        logger.info('Exited (interrupt)')
+    is_initialized = config.initialize()
+    if is_initialized:
+        logger.info("Configuration loaded!")
+        logger.debug("Dump configuration:", dict_msg=config.safe_config())
+        if config.configuration.prometheus["enabled"]:
+            logger.debug('Prometheus is enabled')
+            start_http_server(int(config.configuration.prometheus["port"]))
+        try:
+            find_submissions(connect_to_reddit())
+        except KeyboardInterrupt:
+            logger.info('Exited (interrupt)')
+    else:
+        sys.exit(1)
 
 
 if __name__ == '__main__':

@@ -22,13 +22,13 @@ def send_to_reddit(subject, body, reddit):
 
 
 def clamp_text(text, limit=2048):
-    return text[:(limit - 4)] + (text[(limit - 4):] and '...')
+    return text[:(limit - 3)] + (text[(limit - 4):] and '...')
 
 
 def send_to_discord(submission, config_data):
     try:
         headers = {'Content-Type': 'application/json'}
-        if hasattr(submission, 'url_overridden_by_dest') and submission.url_overridden_by_dest != '':
+        if 'url_overridden_by_dest' in submission.__dict__ and submission.url_overridden_by_dest != '':
             desc = '[' + submission.domain + '](' + submission.url_overridden_by_dest + ')'
         else:
             desc = clamp_text(processor.find_and_replace_by_expression(submission.selftext, config_data['match_data']))
