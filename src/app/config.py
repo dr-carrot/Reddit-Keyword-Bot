@@ -4,7 +4,6 @@ import os
 from os import path
 import yaml
 from collections.abc import MutableMapping
-import sys
 
 from . import logger
 
@@ -74,8 +73,7 @@ class BotProperties:
                 if 'expressions' not in item:
                     has_issues = True
                     logger.error("Missing an 'expression' value for scraper profile at index " + str(ix))
-        if has_issues:
-            sys.exit(1)
+        return not has_issues
 
 
 def to_env_var(parent, var_path=None, prefix='bot'):
@@ -117,6 +115,8 @@ def merge(a, b, obj_path=None):
                 pass  # same leaf value
             elif b[key] is not None:
                 a[key] = b[key]
+        else:
+            a[key] = b[key]
 
     return a
 
@@ -154,4 +154,4 @@ def initialize():
         else:
             logger.info("Using Notification service: " + key.split('_')[0])
 
-    configuration.verify()
+    return configuration.verify()

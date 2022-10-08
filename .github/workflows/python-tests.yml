@@ -27,6 +27,18 @@ jobs:
           flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
           # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
           flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
-      - name: Build coverage file
-        run: |
-          python -m pytest --cache-clear --cov=src/app tests/ --cov-report xml
+      - name: Run the tests
+        run: python3 -m pytest --cache-clear --cov=src/app tests/ | sed -En 's/^TOTAL\W+[0-9]+\W+[0-9]+\W+([0-9]+)%$/COV_PERC=\1/p' >> $GITHUB_ENV
+
+      - name: Create the Badge
+        uses: schneegans/dynamic-badges-action@v1.4.0
+        if: github.ref == 'refs/heads/master'
+        with:
+          auth: ${{ secrets.GIST_SECRET }}
+          gistID: 95deece33981c0987df66a1a076c319c
+          filename: rkb_coverage_${{ matrix.python-version }}.json
+          label: Coverage
+          message: ${{ env.COV_PERC }}%
+          valColorRange: ${{ env.COV_PERC }}
+          maxColorRange: 100
+          minColorRange: 0

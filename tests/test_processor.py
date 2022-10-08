@@ -128,6 +128,14 @@ class MatchStringTests(unittest.TestCase):
         is_match = processor.match_string('/(is|anyone|there) ?[a-zA-Z]+.*\\?$/', 'Hello world, how is it going?')
         self.assertTrue(is_match)
 
+    def test_match_string_regex_case_sensitive(self):
+        is_match = processor.match_string('~/(is|anyone|there) ?[a-zA-Z]+.*\\?$/', 'Hello world, how is it going?')
+        self.assertTrue(is_match)
+
+    def test_match_string_regex_case_sensitive_fail(self):
+        is_match = processor.match_string('~/(Is|anyone|there) ?[a-zA-Z]+.*\\?$/', 'Hello world, how is it going?')
+        self.assertFalse(is_match)
+
     def test_match_string_regex_negated(self):
         is_match = processor.match_string('!/(is|anyone|there) ?[a-zA-Z]+.*\\?$/', 'Hello world, how is it going?')
         self.assertFalse(is_match)
