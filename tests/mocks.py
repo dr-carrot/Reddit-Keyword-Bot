@@ -10,6 +10,7 @@ class MockStream:
     def submissions(self, skip_existing):
         return self.data
 
+
 class MockSubs:
     def __init__(self, data):
         self.stream = MockStream(data)
@@ -30,6 +31,7 @@ def create_submission(display_name='test', title='test title'):
     mockSub.subreddit.display_name_prefixed = 'r/' + display_name
     mockSub.title = title
     return mockSub
+
 
 def create_reddit():
     mockReddit = MagicMock(praw.Reddit)

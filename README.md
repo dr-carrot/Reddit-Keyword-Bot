@@ -27,6 +27,10 @@ So the property `reddit.clientId` would be `BOT_REDDIT_CLIENTID` and `notificati
 The app must be restarted when the configuration is changed. Items in the config file are OVERWRITTEN by their corresponding environment variable
 
 ### Reddit Configuration `reddit.* (BOT_REDDIT_*)`
+> [!warning]
+> Reddit has since disabled the creation of new personal use scripts. You can still use the bot, but you will need to use a different client type. A new auth method is likely to be implemented soon.
+
+
 To get the client id and client secret from new reddit, go to [your username > user settings > safety and privacy > manage third-party app authorization](https://www.reddit.com/prefs/apps) > create new app. Make sure you select "script". Call the bot whatever you like, and in the "redirect uri" box, enter "http://localhost:8080" (or whatever port you exposed). Then click create. The client id is in the upper left of the box  under "personal use script" and the secret is labeled.
 * `reddit.username (BOT_REDDIT_USERNAME)` - The username for the bot to use to find submissions
 * `reddit.password (BOT_REDDIT_PASSWORD)` - The password for the bot to use

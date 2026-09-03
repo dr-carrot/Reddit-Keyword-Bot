@@ -1,8 +1,9 @@
 import unittest
 
+
 class TestStringMethods(unittest.TestCase):
 
-    def test_clam_text(self):
+    def test_clamp_text(self):
         self.assertEqual('foo'.upper(), 'FOO')
 
 
