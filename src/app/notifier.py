@@ -1,3 +1,4 @@
+import re
 import time
 import datetime
 from . import config
@@ -23,6 +24,26 @@ def send_to_reddit(subject, body, reddit):
 
 def clamp_text(text, limit=2048):
     return text[:(limit - 3)] + (text[(limit - 4):] and '...')
+
+
+APOLLO_REGEXES = [
+    (re.compile(r'https?://([a-z0-9-]+\.)*reddit\.com'), 'apollo://reddit.com'),
+    (re.compile(r'https?://(a-z0-9-]+\.)*redd\.it'), 'apollo://redd.it')
+]
+
+
+def _craft_apollo_url(url):
+    for regex, replacement in APOLLO_REGEXES:
+        if regex.match(url):
+            return regex.sub(replacement, url)
+    return url
+
+
+def _substitute_reddit_url_in_text(text):
+    new_text = text
+    for regex, replacement in APOLLO_REGEXES:
+        new_text = regex.sub(replacement, new_text)
+    return new_text
 
 
 def send_to_discord(submission, config_data):
@@ -54,8 +75,9 @@ def send_to_discord(submission, config_data):
             sub_url = 'https://old.reddit.com' + submission.subreddit.display_name_prefixed
             post_url = 'https://old.reddit.com' + submission.subreddit.url + '/comments/' + submission.id
         elif config.configuration.redditClient.lower() == 'apollo':
-            sub_url = 'https://openinapollo.com?subreddit=' + submission.subreddit.display_name
-            post_url = 'https://openinapollo.com?subreddit=' + submission.subreddit.display_name + '&postID=' + submission.id
+            sub_url = 'apollo://reddit.com?subreddit=' + submission.subreddit.display_name
+            post_url = 'apollo://reddit.com?subreddit=' + submission.subreddit.display_name + '&postID=' + submission.id
+            desc = _substitute_reddit_url_in_text(desc)
         else:
             logger.error('Could not build reddit url! Unknown client type')
             return
